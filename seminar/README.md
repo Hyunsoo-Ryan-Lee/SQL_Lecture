@@ -1,256 +1,518 @@
-## 1. SELECT 기능 훑어보기
+## 1. 데이터 추출/필터링
 
-#### 모든 내용 보기
+#### 1-1. 모든 내용 보기
 ```sql
-SELECT * FROM orders;
+SELECT * FROM codeit-hyunsoo.food.orders
 ```
 
-#### 특정 컬럼만 보기
+#### 1-2. 특정 컬럼만 보기
 ```sql
-SELECT order_id, pizza_id, quantity FROM orders;
+SELECT order_id, pizza_id, quantity FROM codeit-hyunsoo.food.orders;
 ```
 
-#### 일부만 가져오기 (LIMIT)
+#### 1-3. 일부만 가져오기(LIMIT)
 ```sql
-SELECT * FROM pizzas LIMIT 5;
+SELECT * FROM codeit-hyunsoo.food.pizzas LIMIT 10
 ```
 
-#### 원하는 이름(alias)으로 가져오기
+#### 1-4. COUNT, DISTINCT
 ```sql
-SELECT pizza_name AS name, size AS pizza_size, price AS cost FROM pizzas;
+SELECT 
+    COUNT(*)
+FROM
+    orders;
+
+SELECT 
+    DISTINCT(size)
+FROM
+    codeit-hyunsoo.food.pizzas
+
+-- 카테고리 개수
+SELECT 
+    COUNT(DISTINCT(category))
+FROM
+    codeit-hyunsoo.food.pizza_types
+
+-- 주문 횟수
+SELECT
+    COUNT(DISTINCT order_id)
+FROM
+    codeit-hyunsoo.food.orders
 ```
 
-#### 고정값 넣기
+#### 1-5. 원하는 이름(alias)으로 가져오기
 ```sql
-SELECT pizza_name, size, price, 'Pizza Order' AS category FROM pizzas;
+SELECT 
+    pizza_name AS name, 
+    size AS pizza_size, 
+    price AS cost 
+FROM
+    codeit-hyunsoo.food.pizzas
 ```
 
-## 2. 필터링 기능 훑어보기
-
-#### 연산자
+#### 1-6. WHERE-비교 연산자
 ```sql
-SELECT * FROM pizzas WHERE price > 30000;
+SELECT 
+    * 
+FROM
+    codeit-hyunsoo.food.orders
+WHERE 
+    pizza_id = 'big_meat_l'
+
+SELECT 
+    * 
+FROM
+    codeit-hyunsoo.food.orders
+WHERE 
+    quantity != 2
+
+SELECT 
+    * 
+FROM
+    codeit-hyunsoo.food.pizzas
+WHERE 
+    price < 30000
 ```
 
-#### WHERE
+#### 1-7. IN
 ```sql
-SELECT * FROM orders WHERE pizza_id = 'big_meat_l';
+SELECT
+    *
+FROM
+    codeit-hyunsoo.food.orders
+WHERE 
+    pizza_id IN ('big_meat_l', 'pepperoni_l')
+
+SELECT
+    *
+FROM
+    codeit-hyunsoo.food.pizza
+WHERE 
+    size IN ('L', 'M')
 ```
 
-#### IN
+#### 1-8. LIKE
 ```sql
-SELECT * FROM orders WHERE pizza_id IN ('big_meat_l', 'pepperoni_l');
+SELECT
+    *
+FROM
+    codeit-hyunsoo.food.pizza_types
+WHERE
+    ingredients LIKE '%%Tomatoes%%'
 ```
 
-#### BETWEEN
+#### 1-9. BETWEEN
 ```sql
-SELECT * FROM pizzas WHERE price BETWEEN 20000 AND 30000;
+SELECT 
+    * 
+FROM
+    codeit-hyunsoo.food.pizzas
+WHERE 
+    price BETWEEN 20000 AND 30000
 ```
 
-#### LIKE
+#### 1-10. ORDER BY
 ```sql
-SELECT * FROM pizza_types WHERE ingredients LIKE '%%Tomatoes%%';
+SELECT
+    *
+FROM
+    codeit-hyunsoo.food.pizzas
+ORDER BY 
+    price ASC/DESC;
+
+SELECT
+    * 
+FROM
+    codeit-hyunsoo.food.pizzas
+WHERE 
+    price BETWEEN 20000 AND 30000
+ORDER BY 
+    price DESC
 ```
 
-#### NULL
+#### 1-11. 계산 함수
 ```sql
-SELECT * FROM orders WHERE pizza_id IS NULL;
+SELECT 
+    SUM(price) AS sum,
+    AVG(price) AS average,
+    MIN(price) AS min,
+    MAX(price) AS max,
+    ROUND(AVG(price), 3) AS round
+FROM
+    codeit-hyunsoo.food.pizzas
+
+-- 피자의 총 판매량
+SELECT 
+    SUM(quantity) AS total_quantity_sold
+FROM
+    orders
 ```
 
-## 3. ORDER BY
+#### 1-12. 서브 쿼리
 ```sql
-SELECT * FROM pizzas ORDER BY price ASC;
-```
-```sql
-SELECT * FROM pizzas ORDER BY price DESC;
-```
+SELECT 
+    COUNT(pizza_type_id) as l_count
+FROM
+    (
+    SELECT * FROM codeit-hyunsoo.food.pizzas
+    WHERE size = 'L'
+    )
 
-## 4. 수치형 계산 - COUNT, SUM, AVG, MIN, MAX, ROUND
-
-#### COUNT
-```sql
-SELECT COUNT(*) AS total_orders FROM orders;
-```
-
-#### SUM
-```sql
-SELECT SUM(price) AS total_revenue FROM pizzas WHERE size = 'L';
-```
-
-#### AVG
-```sql
-SELECT AVG(price) AS average_price FROM pizzas;
+SELECT 
+  *
+FROM
+    codeit-hyunsoo.food.pizzas
+WHERE price > 
+    (
+    SELECT AVG(price) FROM codeit-hyunsoo.food.pizzas
+    )
 ```
 
-#### MIN
+## 2. 데이터 집계
+
+#### 2-1. GROUP BY
 ```sql
-SELECT MIN(price) AS cheapest_pizza FROM pizzas;
+SELECT 
+    category,
+    COUNT(*) AS order_count
+FROM
+    codeit-hyunsoo.food.pizza_types
+GROUP BY
+    category;
 ```
 
-#### MAX
+#### 2-2. 집계 함수
 ```sql
-SELECT MAX(price) AS most_expensive_pizza FROM pizzas;
-```
-#### ROUND
-```sql
-SELECT ROUND(AVG(price), 3) AS average_price FROM pizzas;
-```
+SELECT 
+    order_id,
+    COUNT(order_id) AS cnt,
+    MIN(quantity) AS min_q,
+    MAX(quantity) AS max_q,
+    AVG(quantity) AS average,
+    ROUND(AVG(quantity)) AS round_avg
+FROM
+    codeit-hyunsoo.food.orders
+GROUP BY 
+    order_id
 
-## 5. GROUP BY - HAVING
-
-#### GROUP BY
-```sql
-SELECT pizza_name, COUNT(*) AS order_count FROM pizza_types GROUP BY pizza_name;
-```
-
-#### HAVING
-```sql
-SELECT pizza_name, COUNT(*) AS order_count 
-FROM pizza_types 
-GROUP BY pizza_name 
-HAVING COUNT(*) > 1;
-```
-
-## 6. 서브 쿼리
-```sql
-SELECT * FROM pizzas WHERE price > (SELECT AVG(price) FROM pizzas);
+-- 피자 사이즈별 평균 금액
+SELECT
+    size,
+    ROUND(AVG(price), 0) AS average_price
+FROM
+    codeit-hyunsoo.food.pizzas
+GROUP BY
+    size
 ```
 
-## 7. JOIN
-
-#### INNER JOIN
+#### 2-3. 정렬
 ```sql
-SELECT o.order_id, p.pizza_name, p.price 
-FROM orders o 
-INNER JOIN pizzas p 
-ON o.pizza_id = p.pizza_id;
+SELECT 
+    order_id,
+    COUNT(order_id) AS cnt,
+    MIN(quantity) AS min_q,
+    MAX(quantity) AS max_q,
+    AVG(quantity) AS average,
+    ROUND(AVG(quantity)) AS round_avg
+FROM
+    codeit-hyunsoo.food.orders
+GROUP BY 
+    order_id
+ORDER BY 
+    max_q DESC
+
+-- 한 주문당 시킨 피자 판 수 내림차순 정렬
+SELECT
+    order_id,
+    SUM(quantity) AS total_pizzas_ordered
+FROM 
+    codeit-hyunsoo.food.orders
+GROUP BY
+    order_id
+ORDER BY
+    total_pizzas_ordered DESC
 ```
 
-#### LEFT JOIN
+#### 2-3. 조건 - HAVING
 ```sql
-SELECT o.order_id, p.pizza_name, p.price 
-FROM orders o 
-LEFT JOIN pizzas p 
-ON o.pizza_id = p.pizza_id;
+SELECT 
+    category,
+    COUNT(*) AS category_count
+FROM
+    codeit-hyunsoo.food.pizza_types
+GROUP BY
+    category
+HAVING
+    category_count >= 7
+```
+
+## 3. 데이터 변환
+
+#### 3-1. 데이터 타입 변환 - CAST
+```sql
+SELECT
+    SUM(quantity)
+FROM 
+  (
+  SELECT
+      quantity,
+      CAST(quantity AS STRING) AS str_quantity
+  FROM
+      codeit-hyunsoo.food.orders
+  )
+```
+
+#### 3-2. 문자열 변환
+```sql
+SELECT
+    CONCAT(pizza_type_id, size) AS concat_col,
+    LEFT(pizza_id, 3) AS left_col,
+    RIGHT(pizza_id, 3) AS right_col,
+    UPPER(pizza_id) AS upper_col,
+    LOWER(size) AS lower_col,
+    REPLACE(size, 'L', 'XL') AS replace_col,
+    SUBSTRING(pizza_type_id, 1, 3) AS substring_col,
+    SPLIT(pizza_id, '_') AS split_col
+FROM 
+    codeit-hyunsoo.food.pizzas
+```
+
+#### 3-3. 날짜 데이터 변환
+```sql
+SELECT
+    EXTRACT(YEAR FROM order_timestamp) AS year,
+    EXTRACT(MONTH FROM order_timestamp) AS month,
+    EXTRACT(DAY FROM order_timestamp) AS day,
+    EXTRACT(HOUR FROM order_timestamp) AS hour,
+    EXTRACT(MINUTE FROM order_timestamp) AS minute,
+    EXTRACT(SECOND FROM order_timestamp) AS second
+FROM
+    codeit-hyunsoo.food.orders
+
+SELECT
+    DATE(order_timestamp) AS date_time
+FROM
+    codeit-hyunsoo.food.orders
+
+
+```
+
+## 4. JOIN
+
+#### 4-1. INNER JOIN
+```sql
+SELECT 
+    o.*, p.*
+FROM
+    codeit-hyunsoo.food.orders o 
+INNER JOIN
+    codeit-hyunsoo.food.pizzas p 
+ON 
+    o.pizza_id = p.pizza_id
+```
+
+#### 4-2. LEFT/RIGHT/FULL JOIN
+```sql
+SELECT 
+    p.*, t.*
+FROM
+    codeit-hyunsoo.food.pizzas p 
+LEFT/RIGHT/FULL JOIN
+    codeit-hyunsoo.food.pizza_types t 
+ON 
+    p.pizza_type_id = t.pizza_type_id
+```
+
+#### 4-3. CROSS JOIN
+```sql
+SELECT 
+    *
+FROM
+    codeit-hyunsoo.food.pizzas p 
+CROSS JOIN
+    codeit-hyunsoo.food.pizza_types t 
+```
+
+#### 4-4. 2개 이상 테이블 JOIN
+```sql
+SELECT 
+    o.*, p.*, t.*
+FROM 
+    codeit-hyunsoo.food.orders o
+    JOIN 
+        codeit-hyunsoo.food.pizzas p
+    ON
+        o.pizza_id = p.pizza_id
+        JOIN
+            codeit-hyunsoo.food.pizza_types t
+        ON
+            p.pizza_type_id = t.pizza_type_id
 ```
 ---
-## 응용 문제
+## 5. 응용 문제
 
-### 1. unique 영업일 수
+#### 1. 1년 간 영업일 수
 ```sql
-SELECT COUNT(DISTINCT DATE(order_timestamp)) AS unique_business_days
-FROM orders;
+SELECT 
+    COUNT(DISTINCT(date(order_timestamp))) AS workday
+FROM
+    codeit-hyunsoo.food.orders
 ```
 
-### 2. 총 매출
+#### 2. 1년 총 매출
 ```sql
-SELECT SUM(p.price * o.quantity) AS total_revenue
-FROM orders o
-JOIN pizzas p ON o.pizza_id = p.pizza_id;
+SELECT 
+    SUM(p.price * o.quantity) AS total_revenue
+FROM 
+    codeit-hyunsoo.food.orders o
+JOIN 
+    codeit-hyunsoo.food.pizzas p 
+ON 
+    o.pizza_id = p.pizza_id
 ```
 
-### 3. 하루 평균 매출
+#### 3. 하루 평균 매출
 ```sql
-SELECT SUM(p.price * o.quantity) / COUNT(DISTINCT DATE(o.order_timestamp)) AS avg_daily_revenue
-FROM orders o
-JOIN pizzas p ON o.pizza_id = p.pizza_id;
+SELECT
+    ROUND(SUM(p.price * o.quantity) / COUNT(DISTINCT DATE(o.order_timestamp)), -2) AS avg_daily_revenue
+FROM
+    codeit-hyunsoo.food.orders o
+JOIN
+    codeit-hyunsoo.food.pizzas p
+ON
+    o.pizza_id = p.pizza_id;
 ```
 
-### 4. 1년동안 주문 횟수
+#### 4. 주문별 가격
 ```sql
-SELECT COUNT(DISTINCT order_id) AS total_orders
-FROM orders
-WHERE YEAR(order_timestamp) = 2023;
+SELECT 
+    o.order_id, SUM(p.price * o.quantity) AS total_revenue
+FROM 
+    codeit-hyunsoo.food.orders o
+JOIN 
+    codeit-hyunsoo.food.pizzas p 
+ON 
+    o.pizza_id = p.pizza_id
+GROUP BY 
+    o.order_id
 ```
 
-### 5. 평균 주문 금액
+#### 5. 1회 평균 주문 금액
 ```sql
-SELECT AVG(sub.total_order_value) AS avg_order_value
+SELECT 
+    ROUND(AVG(total_revenue), -2) AS avg_revenue 
 FROM (
-    SELECT SUM(p.price * o.quantity) AS total_order_value
-    FROM orders o
-    JOIN pizzas p ON o.pizza_id = p.pizza_id
-    GROUP BY o.order_id
-) sub;
+    SELECT 
+        o.order_id, SUM(p.price * o.quantity) AS total_revenue
+    FROM 
+        codeit-hyunsoo.food.orders o
+    JOIN 
+        codeit-hyunsoo.food.pizzas p 
+    ON 
+        o.pizza_id = p.pizza_id
+    GROUP BY
+        o.order_id
+    )
 ```
 
-### 6. 총 판매량
+#### 6. 월별 매출
 ```sql
-SELECT SUM(quantity) AS total_quantity_sold
-FROM orders;
+SELECT 
+    EXTRACT(MONTH FROM o.order_timestamp) AS order_month, 
+    SUM(p.price * o.quantity) AS monthly_revenue
+FROM 
+    codeit-hyunsoo.food.orders o
+JOIN
+    codeit-hyunsoo.food.pizzas p
+ON
+    o.pizza_id = p.pizza_id
+GROUP BY
+    order_month
+ORDER BY
+    order_month
 ```
 
-### 7. 한 주문당 시킨 피자 판 수 내림차순 정렬
+#### 7. 시간대별 매출
 ```sql
-SELECT order_id, SUM(quantity) AS total_pizzas_ordered
-FROM orders
-GROUP BY order_id
-ORDER BY total_pizzas_ordered DESC;
+SELECT 
+    EXTRACT(HOUR FROM o.order_timestamp) AS order_hour, 
+    SUM(p.price * o.quantity) AS monthly_revenue
+FROM 
+    codeit-hyunsoo.food.orders o
+JOIN
+    codeit-hyunsoo.food.pizzas p
+ON
+    o.pizza_id = p.pizza_id
+GROUP BY
+    order_hour
+ORDER BY
+    order_hour
 ```
 
-### 8. 월별 매출
+#### 8. 피자 사이즈별 판매 수량
 ```sql
-SELECT DATE_FORMAT(order_timestamp, '%Y-%m') AS month, SUM(p.price * o.quantity) AS monthly_revenue
-FROM orders o
-JOIN pizzas p ON o.pizza_id = p.pizza_id
-GROUP BY month
-ORDER BY month;
+SELECT 
+    size,
+    SUM(quantity) AS sold_quantity 
+FROM (
+    SELECT 
+        o.quantity, p.size
+    FROM 
+        codeit-hyunsoo.food.orders o
+        JOIN 
+            codeit-hyunsoo.food.pizzas p
+        ON
+            o.pizza_id = p.pizza_id
+)
+GROUP BY
+    size
 ```
 
-### 9. 요일별 매출
+#### 9. 피자 카테고리별 판매 수량
 ```sql
-SELECT DATE_FORMAT(order_timestamp, '%W') AS weekday, SUM(p.price * o.quantity) AS weekday_revenue
-FROM orders o
-JOIN pizzas p ON o.pizza_id = p.pizza_id
-GROUP BY weekday
-ORDER BY FIELD(weekday, 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday');
+SELECT 
+    category,
+    SUM(quantity) AS sold_quantity 
+FROM (
+    SELECT 
+        o.quantity, t.category
+    FROM 
+        codeit-hyunsoo.food.orders o
+        JOIN 
+            codeit-hyunsoo.food.pizzas p
+        ON
+            o.pizza_id = p.pizza_id
+            JOIN
+                codeit-hyunsoo.food.pizza_types t
+            ON
+                p.pizza_type_id = t.pizza_type_id
+)
+GROUP BY
+    category
 ```
 
-### 10. 시간대별 매출
+#### 10. 피자의 카테고리 내 각 사이즈별 판매 수량
 ```sql
-SELECT DATE_FORMAT(order_timestamp, '%H:00') AS hour, SUM(p.price * o.quantity) AS hourly_revenue
-FROM orders o
-JOIN pizzas p ON o.pizza_id = p.pizza_id
-GROUP BY hour
-ORDER BY hour;
-```
-
-### 11. 피자 메뉴별 판매량
-```sql
-SELECT pt.name AS pizza_name, SUM(o.quantity) AS total_quantity_sold
-FROM orders o
-JOIN pizzas p ON o.pizza_id = p.pizza_id
-JOIN pizza_types pt ON p.pizza_type_id = pt.pizza_type_id
-GROUP BY pt.name
-ORDER BY total_quantity_sold DESC;
-```
-
-### 12. 각 피자 메뉴의 월별 판매량
-```sql
-SELECT pt.name AS pizza_name, DATE_FORMAT(o.order_timestamp, '%Y-%m') AS month, SUM(o.quantity) AS monthly_quantity_sold
-FROM orders o
-JOIN pizzas p ON o.pizza_id = p.pizza_id
-JOIN pizza_types pt ON p.pizza_type_id = pt.pizza_type_id
-GROUP BY pt.name, month
-ORDER BY pt.name, month;
-```
-
-### 13. 각 피자 메뉴의 사이즈별 판매량
-```sql
-SELECT pt.name AS pizza_name, p.size, SUM(o.quantity) AS total_quantity_sold
-FROM orders o
-JOIN pizzas p ON o.pizza_id = p.pizza_id
-JOIN pizza_types pt ON p.pizza_type_id = pt.pizza_type_id
-GROUP BY pt.name, p.size
-ORDER BY pt.name, p.size;
-```
-
-### 14. 피자 카테고리별 판매량
-```sql
-SELECT pt.category, SUM(o.quantity) AS total_quantity_sold
-FROM orders o
-JOIN pizzas p ON o.pizza_id = p.pizza_id
-JOIN pizza_types pt ON p.pizza_type_id = pt.pizza_type_id
-GROUP BY pt.category
-ORDER BY total_quantity_sold DESC;
+SELECT 
+    category,
+    size,
+    SUM(quantity) AS sold_quantity 
+FROM (
+    SELECT 
+        o.quantity, p.size, t.category
+    FROM 
+        codeit-hyunsoo.food.orders o
+        JOIN 
+            codeit-hyunsoo.food.pizzas p
+        ON
+            o.pizza_id = p.pizza_id
+            JOIN
+                codeit-hyunsoo.food.pizza_types t
+            ON
+                p.pizza_type_id = t.pizza_type_id
+)
+GROUP BY
+    category, size
+ORDER BY 
+    category, size
 ```
